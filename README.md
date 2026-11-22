@@ -4,14 +4,14 @@
 
 它只定义**策略组**和**分流规则**，不含节点、订阅地址、token 或任何个人信息，因此可以公开托管，给**任意机场的任意订阅**复用。
 
-**两个版本，按需选一个**（只差 6 行 URL，其余完全一样）：
+**两份文件，都在 `main` 分支同一目录，按需选一个**（只差 6 行 URL，其余完全一样）：
 
 | 版本 | 地址 | 一句话 |
 |---|---|---|
-| 跟随上游（推荐） | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full.ini` | 规则跟着上游自动更新，省心 |
-| 冻结规则 | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@frozen-rules/openclash-aethersailor-full.ini` | 规则内容永不变化，可预期、可复现 |
+| 跟随上游（推荐，日常用） | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full.ini` | 规则跟着上游自动更新，省心 |
+| 规则锁定版 | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full-pinned.ini` | 规则内容永不变化，可预期、可复现 |
 
-拿不定就用第一个。两版的业务差异只有 6 行规则集 URL（另有 5 行注释说明），其余逐字相同。详细区别见 [§十一](#十一分支跟随上游-还是-冻结规则)。
+拿不定就用第一个。两份文件的业务差异只有 6 行规则集 URL（另有 7 行注释说明），其余逐字相同。详细区别见 [§十一](#十一两份文件跟随上游-还是-锁定规则)。
 
 ---
 
@@ -41,7 +41,7 @@
 | 规则行 | 63 条 `ruleset=`（官方上限 64，留 1 条余量） |
 | 转换器输出 | 63 条规则 + 6 个 rule-providers（默认模式） |
 | 本文件相对官方 | 只多 1 条 `exclude_remarks`（连同 6 行注释），其余逐字相同 |
-| 文件大小 | 34,685 字节 |
+| 文件大小 | 34,685 字节（锁定版 35,447 字节） |
 
 ### 唯一改动：过滤机场的「伪节点」
 
@@ -335,7 +335,7 @@ configuration file test failed
 
 ---
 
-## 十一、分支：跟随上游 还是 冻结规则
+## 十一、两份文件：跟随上游 还是 锁定规则
 
 ### 这 6 个远程规则集是什么
 
@@ -356,21 +356,23 @@ configuration file test failed
 - 拉取失败不会让服务挂掉：日志里刷 `[Provider] … pull error`，有缓存时继续用上一次的文件，没缓存则该规则集为空
 - 实测路由器直连 jsDelivr：HTTP 200，0.95 秒
 
-### main：跟着上游走
+### openclash-aethersailor-full.ini：跟着上游走（默认推荐）
 
 - 优点：上游是活跃项目（每天自动生成派生规则文件），站点换 CDN、新增 IP 段这类修正你立刻拿到。
 - 风险：上游把某个文件改坏，你跟着中招，而且**没有回滚手段**。
 
-### frozen-rules：锁死
+### openclash-aethersailor-full-pinned.ini：锁定规则
 
-把 6 个 URL 里的 `@main` 换成具体提交号 `@b64d5ac1828495be49751d123daeffff36df1e51`。jsDelivr 对 commit 是**不可变缓存**，内容永远停在那一刻。
+同一目录下的独立文件，不靠分支。它与上面的主文件**只差 6 行 URL**：把 `@main` 换成具体提交号 `@b64d5ac1828495be49751d123daeffff36df1e51`（2026-11-22）。jsDelivr 对 commit 是**不可变缓存**，内容永远停在那一刻。
 
 - 优点：行为可预期、可复现，不受上游改动影响。
 - 代价：上游的修复也拿不到。要刷新时，把 6 行里的 sha 换成上游 main 的最新提交即可（跟我说一句就行）。
 
+> 早期这第二份是放在 `frozen-rules` 分支上的，现已删除，改成同目录独立文件：换模板地址时不用切分支，两份文件用同一条 `@main` 路径取，缓存行为一致。
+
 ### 为什么不做「把规则文件搬进本仓库」
 
-效果和 frozen-rules 完全一样（内容都不再变），却要多维护 6 个文件，还得处理 `.mrs` 是二进制、没法用网页编辑器上传的问题——收益为零。所以「冻结」用固定 commit 实现，不搬文件。
+效果和 pinned 版完全一样（内容都不再变），却要多维护 6 个文件，还得处理 `.mrs` 是二进制、没法用网页编辑器上传的问题——收益为零。所以「锁定」用固定 commit 实现，不搬文件。
 
 真要「一个外部文件都不吃」，唯一有意义的做法是**删掉这 6 条远程规则**，只留 49 条 GEOSITE + 7 条 GEOIP + 兜底。代价：
 
@@ -378,7 +380,7 @@ configuration file test failed
 - Steam 下载不再走直连 CDN，改走代理
 - 自定义直连域名 / IP 名单丢失，部分国内站点可能被代理
 
-不建议，也没做成分支。真需要随时可以做。
+不建议，也没做成单独文件。真需要随时可以做。
 
 ---
 
@@ -399,7 +401,7 @@ configuration file test failed
 **审核也替我确认了这些是对的**（实测，不是推测）：
 
 - 63 组 / 63 条 ruleset 与官方模板**逐字节一致**，除 `exclude_remarks` 和注释外没有其它改动
-- 6 个 `@sha` 冻结地址全部可用，jsDelivr 对 commit 不可变缓存成立
+- 6 个 `@sha` 锁定地址全部可用，jsDelivr 对 commit 不可变缓存成立
 - 63 条规则 + 6 个 rule-providers 的结构能被 mihomo 正常加载
 - 文档里引用的报错文本 `proxy group[0]: … 'use' or 'proxies' missing` 一字不差
 
