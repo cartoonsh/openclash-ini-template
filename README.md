@@ -4,11 +4,14 @@
 
 它只定义**策略组**和**分流规则**，不含节点、订阅地址、token 或任何个人信息，因此可以公开托管，给**任意机场的任意订阅**复用。
 
-**直接用这个地址：**
+**两个版本，按需选一个**（只差 6 行 URL，其余完全一样）：
 
-```
-https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full.ini
-```
+| 版本 | 地址 | 一句话 |
+|---|---|---|
+| 跟随上游（推荐） | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full.ini` | 规则跟着上游自动更新，省心 |
+| 冻结规则 | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@frozen-rules/openclash-aethersailor-full.ini` | 规则内容永不变化，可预期、可复现 |
+
+拿不定就用第一个。详细区别见 [§十一](#十一分支跟随上游-还是-冻结规则)。
 
 ---
 
@@ -288,6 +291,53 @@ configuration file /tmp/vv.yaml test is successful
 - 本文件不含任何订阅地址、token、节点 IP、节点密码。
 - 文件名和仓库名都不含机场名。
 - 提交历史里也没有出现订阅地址（全部通过网页编辑器写入）。
+
+---
+
+## 十一、分支：跟随上游 还是 冻结规则
+
+### 这 6 个远程规则集是什么
+
+模板里有 6 条规则不是内联的，而是引用 Aethersailor 仓库的规则文件：
+
+| 文件 | 内容 | 刷新间隔 |
+|---|---|---|
+| `Custom_Direct_Domain.mrs` | 直连域名 1293 条 | 1800 秒 |
+| `Custom_Direct_Classical_IP.yaml` | 直连 IP 12 条 | 28800 秒 |
+| `Custom_Proxy_Domain.mrs` | 代理域名 17 条 | 28800 秒 |
+| `Custom_Proxy_Classical_IP.yaml` | 代理 IP 1 条 | 28800 秒 |
+| `Steam_CDN_Classical.yaml` | Steam 下载 CDN 26 条 | 28800 秒 |
+| `Custom_Port_Direct.yaml` | 80/443 之外的端口 3 条 | 28800 秒 |
+
+关键点：**它们是 mihomo 在路由器上运行时自己拉的**，不是转换器下载进配置里。所以：
+
+- 不管你更新不更新订阅，它们都会按 `interval` 自己刷
+- 拉取失败不会清空规则——mihomo 有 `path:` 本地缓存，会继续用上一次的文件
+- 实测路由器直连 jsDelivr：HTTP 200，0.95 秒
+
+### main：跟着上游走
+
+- 优点：上游是活跃项目（每天自动生成派生规则文件），站点换 CDN、新增 IP 段这类修正你立刻拿到。
+- 风险：上游把某个文件改坏，你跟着中招，而且**没有回滚手段**。
+
+### frozen-rules：锁死
+
+把 6 个 URL 里的 `@main` 换成具体提交号 `@b64d5ac1828495be49751d123daeffff36df1e51`。jsDelivr 对 commit 是**不可变缓存**，内容永远停在那一刻。
+
+- 优点：行为可预期、可复现，不受上游改动影响。
+- 代价：上游的修复也拿不到。要刷新时，把 6 行里的 sha 换成上游 main 的最新提交即可（跟我说一句就行）。
+
+### 为什么不做「把规则文件搬进本仓库」
+
+效果和 frozen-rules 完全一样（内容都不再变），却要多维护 6 个文件，还得处理 `.mrs` 是二进制、没法用网页编辑器上传的问题——收益为零。所以「冻结」用固定 commit 实现，不搬文件。
+
+真要「一个外部文件都不吃」，唯一有意义的做法是**删掉这 6 条远程规则**，只留 49 条 GEOSITE + 7 条 GEOIP + 兜底。代价：
+
+- `🔀 非标端口` 组失效（没有规则再引用它）
+- Steam 下载不再走直连 CDN，改走代理
+- 自定义直连域名 / IP 名单丢失，部分国内站点可能被代理
+
+不建议，也没做成分支。真需要随时可以做。
 
 ---
 
