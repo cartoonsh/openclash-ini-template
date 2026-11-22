@@ -8,8 +8,8 @@
 
 | 版本 | 地址 | 一句话 |
 |---|---|---|
-| 跟随上游（推荐，日常用） | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full.ini` | 规则跟着上游自动更新，省心 |
-| 规则锁定版 | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aethersailor-full-pinned.ini` | 规则内容永不变化，可预期、可复现 |
+| 跟随上游（推荐，日常用） | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@heads/main/openclash-aethersailor-full.ini` | 规则跟着上游自动更新，省心 |
+| 规则锁定版 | `https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@heads/main/openclash-aethersailor-full-pinned.ini` | 规则内容永不变化，可预期、可复现 |
 
 拿不定就用第一个。两份文件的业务差异只有 6 行规则集 URL（另有 7 行注释说明），其余逐字相同。详细区别见 [§十一](#十一两份文件跟随上游-还是-锁定规则)。
 
