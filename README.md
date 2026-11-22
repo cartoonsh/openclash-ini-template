@@ -16,11 +16,14 @@ https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aeth
 
 1. 复制上面那行 jsDelivr 地址
 2. OpenClash → 配置订阅 → 编辑（或新增）订阅
-3. 「订阅转换」保持开启
-4. 「模板」一栏选「自定义」，把地址粘进去
-5. 保存 → 应用
+3. 「订阅转换」开关保持开启
+4. 「模板名称」下拉里选 **自定义**（Custom Template）
+5. 下面会多出一栏「自定义模板地址」，把地址粘进去
+6. 保存 → 应用 → 更新订阅
 
 之后每次订阅更新（你设 3 小时一次也行），转换站都会按这个模板重新生成配置，**不需要手动转换**。
+
+> 只改一条订阅也行，先在一个订阅上试；不放心就留着原来的 ACL4SSR 那条对照。
 
 ---
 
@@ -33,7 +36,7 @@ https://cdn.jsdelivr.net/gh/cartoonsh/openclash-ini-template@main/openclash-aeth
 | 上游来源 | [Aethersailor/Custom_OpenClash_Rules](https://github.com/Aethersailor/Custom_OpenClash_Rules) 的 `Custom_Clash_Full.ini` |
 | 策略组 | 63 个（与官方完全一致） |
 | 规则行 | 63 条 `ruleset=`（官方上限 64，留 1 条余量） |
-| 转换后展开 | 99 条规则 |
+| 转换器输出 | 63 条规则 + 6 个 rule-providers（默认模式） |
 | 本文件相对官方 | 只多 1 行 `exclude_remarks` |
 | 文件大小 | 34,329 字节 |
 
@@ -105,7 +108,7 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 | proxy-provider YAML | 否（远程引用） | 否 | 只提供节点列表 | 视情况 |
 | 机场原始订阅 | 是 | 部分 | 待转换的原料 | 不可以（含 token） |
 
-成品和原料必然含节点，模板按机制用不到节点。而本文件里有的是订阅里**没有**的东西——63 组结构、地区匹配正则、99 条分流规则、伪节点过滤，这些跟具体机场无关，换任何订阅都能用。
+成品和原料必然含节点，模板按机制用不到节点。而本文件里有的是订阅里**没有**的东西——63 组结构、地区匹配正则、63 条分流规则、伪节点过滤，这些跟具体机场无关，换任何订阅都能用。
 
 如果你需要「含节点」的成品，那是完整 Clash YAML，只能本地用，**不能公开**。
 
@@ -146,7 +149,25 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 | `clash-classic:` 远程规则集 | 4 | `Custom_Direct_Classical_IP`、`Custom_Proxy_Classical_IP`、`Steam_CDN_Classical`、`Custom_Port_Direct` |
 | `[]FINAL` | 1 | 兜底，指向 `🐟 漏网之鱼` |
 
-转换后展开成 **99 条**规则：
+转换之后长什么样，**取决于转换器有没有把远程规则集展开**。两种情况我都用真实内核校验过，都能正常加载，模板不用改。
+
+### 情况 A：不展开（OpenClash 的实际行为）
+
+OpenClash 拼转换地址时不带 `expand`，于是远程规则集保留成 `rule-providers`：
+
+| 规则类型 | 条数 |
+|---|---|
+| GEOSITE | 49 |
+| GEOIP | 7 |
+| RULE-SET（指向 6 个远程规则集） | 6 |
+| MATCH | 1 |
+| **合计** | **63** |
+
+此时输出里有 `rule-providers:` 段，mihomo 按 `interval` 自行更新那 6 个文件（1800 / 28800 秒），不占用规则行数。
+
+### 情况 B：展开（`expand=true`）
+
+转换器把 6 个远程规则集拆成一条条规则，输出 99 条扁平规则、没有 `rule-providers`：
 
 | 规则类型 | 条数 |
 |---|---|
@@ -157,13 +178,11 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 | SRC-PORT | 1 |
 | DOMAIN-SUFFIX | 3 |
 | MATCH | 1 |
+| **合计** | **99** |
 
-那 42 条 `IP-CIDR` / `DOMAIN-SUFFIX` / `DST-PORT` / `SRC-PORT` **不是手写的**，是转换器把 6 个远程规则集展开（`expand=true`）的结果。所以：
+那 42 条 `IP-CIDR` / `DOMAIN-SUFFIX` / `DST-PORT` / `SRC-PORT` **不是手写的**，是远程规则集展开出来的内容。
 
-- 输出里**没有 `rule-providers`**，规则是平的，mihomo 不用额外拉规则文件；
-- 但转换那一刻，转换站必须能拉到 Aethersailor 仓库那 6 个文件（走 jsDelivr）。
-
-> 这也是我上一版多出 42 条重复规则的原因：我手写了一遍 IP/端口/域名规则，但远程规则集本来就会展开出同样的内容，于是规则数从 99 变成 141。现在规则段完全照抄官方，不再重复。
+> 这也是我上一版多出 42 条重复规则的原因：我手写了一遍 IP/端口/域名规则，展开模式下远程规则集又会给出同样的内容，规则数从 99 变成 141。现在规则段完全照抄官方，不再重复。
 
 ---
 
@@ -175,16 +194,16 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 
 | 订阅 | 转换结果 | 组数 | 规则数 | 真空组 |
 |---|---|---|---|---|
-| 一分机场 | 成功 | 63 | 99 | 0 |
-| 泡泡狗 | 成功 | 63 | 99 | 0 |
-| 泡泡狗转 | 成功 | 63 | 99 | 0 |
-| 69云 | 成功 | 63 | 99 | 0 |
-| 69云转 | 成功 | 63 | 99 | 0 |
-| 糖果 | 成功 | 63 | 99 | 0 |
-| 极速Cloud | 成功 | 63 | 99 | 0 |
-| 极速Cloud转 | 成功 | 63 | 99 | 0 |
-| Bluetile | 成功 | 63 | 99 | 0 |
-| Bluetile转 | 成功 | 63 | 99 | 0 |
+| 一分机场 | 成功 | 63 | 63 | 0 |
+| 泡泡狗 | 成功 | 63 | 63 | 0 |
+| 泡泡狗转 | 成功 | 63 | 63 | 0 |
+| 69云 | 成功 | 63 | 63 | 0 |
+| 69云转 | 成功 | 63 | 63 | 0 |
+| 糖果 | 成功 | 63 | 63 | 0 |
+| 极速Cloud | 成功 | 63 | 63 | 0 |
+| 极速Cloud转 | 成功 | 63 | 63 | 0 |
+| Bluetile | 成功 | 63 | 63 | 0 |
+| Bluetile转 | 成功 | 63 | 63 | 0 |
 
 「真空组」指既没有 `proxies:` 列表、也没有 `use:` 的策略组。**这种组会让 mihomo 直接拒绝加载**，实测报错：
 
@@ -203,8 +222,8 @@ configuration file test failed
 configuration file /tmp/vv.yaml test is successful
 ```
 
-- Bluetile：63 组 / 99 规则，通过
-- 一分机场：63 组 / 99 规则，通过
+- Bluetile：63 组 / 63 规则 + 6 个 rule-providers，通过
+- 一分机场：63 组 / 63 规则 + 6 个 rule-providers，通过
 
 49 条 geosite 全部正常加载（`cn` 110,177 条、`geolocation-!cn` 27,378 条、`gfw` 4,462 条……），无报错。
 
