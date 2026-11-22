@@ -1,4 +1,4 @@
-# OpenClash 订阅转换模板（Aethersailor Full · 63 组）
+# OpenClash 订阅转换模板（Aethersailor Full · 58 组）
 
 给 [subconverter](https://github.com/tindy2013/subconverter) 用的**外部配置模板**（对应转换接口的 `config=` 参数），供 OpenClash 做订阅转换时调用。
 
@@ -37,11 +37,11 @@
 | 项目 | 值 |
 |---|---|
 | 上游来源 | [Aethersailor/Custom_OpenClash_Rules](https://github.com/Aethersailor/Custom_OpenClash_Rules) 的 `Custom_Clash_Full.ini` |
-| 策略组 | 63 个（与官方完全一致） |
+| 策略组 | 58 个（官方 63 个，5 个国外 AI 组已并入 `🤖 国外AI服务`） |
 | 规则行 | 63 条 `ruleset=`（官方上限 64，留 1 条余量） |
 | 转换器输出 | 63 条规则 + 6 个 rule-providers（默认模式） |
 | 本文件相对官方 | 只多 1 条 `exclude_remarks`（连同 6 行注释），其余逐字相同 |
-| 文件大小 | 34,685 字节（锁定版 35,447 字节） |
+| 文件大小 | 32,375 字节（锁定版 33,137 字节） |
 
 ### 唯一改动：过滤机场的「伪节点」
 
@@ -86,7 +86,7 @@ exclude_remarks=(^[\[【(（]?(剩余流量|到期|套餐到期|重要提示|距
 
 也就是说加拿大、土耳其、家宽、低倍率节点**被明确排除出「其他地区」**，等着进它们各自的专属组。我把那 4 个组删了却没改这条正则，结果这些节点既进不了地区组、也进不了「其他地区」——**在分组里彻底消失**。
 
-所以现在直接沿用官方 63 组，不自己造。好处有两个：不会漏组；上游改规则时重新同步一次即可，不会越改越偏。
+所以现在直接沿用官方 63 组的结构，不自己造，只把 5 个国外 AI 组（ChatGPT / Copilot / Claude / Gemini / Grok）合并进 `🤖 国外AI服务`，变成 58 组。好处有两个：不会漏组；上游改规则时重新同步一次即可，不会越改越偏。
 
 ---
 
@@ -94,7 +94,7 @@ exclude_remarks=(^[\[【(（]?(剩余流量|到期|套餐到期|重要提示|距
 
 | 内容 | 是否包含 | 说明 |
 |---|---|---|
-| 策略组定义（63 组） | 包含 | 组名、类型（`select` / `url-test`）、测速地址与间隔 |
+| 策略组定义（58 组） | 包含 | 组名、类型（`select` / `url-test`）、测速地址与间隔 |
 | 节点名匹配正则 | 包含 | 例如 `港\|HK\|Hong Kong`，用于把节点自动归入地区组 |
 | 分流规则 | 包含 | 49 条 `GEOSITE` + 7 条 `GEOIP` + 6 个远程规则集 + 1 条 `FINAL` |
 | 伪节点过滤 | 包含 | `exclude_remarks`，剔除套餐信息节点 |
@@ -121,13 +121,13 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 | proxy-provider YAML | 否（远程引用） | 否 | 只提供节点列表 | 视情况 |
 | 机场原始订阅 | 是 | 部分 | 待转换的原料 | 不可以（含 token） |
 
-成品和原料必然含节点，模板按机制用不到节点。而本文件里有的是订阅里**没有**的东西——63 组结构、地区匹配正则、63 条分流规则、伪节点过滤，这些跟具体机场无关，换任何订阅都能用。
+成品和原料必然含节点，模板按机制用不到节点。而本文件里有的是订阅里**没有**的东西——58 组结构、地区匹配正则、63 条分流规则、伪节点过滤，这些跟具体机场无关，换任何订阅都能用。
 
 如果你需要「含节点」的成品，那是完整 Clash YAML，只能本地用，**不能公开**。
 
 ---
 
-## 四、63 个策略组
+## 四、58 个策略组
 
 | 分类 | 组名（与模板逐字一致，可直接在面板里搜） |
 |---|---|
@@ -135,7 +135,7 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 | 地区（15） | 🇭🇰 香港节点、🇺🇸 美国节点、🇯🇵 日本节点、🇸🇬 新加坡节点、🇼🇸 台湾节点、🇰🇷 韩国节点、🇨🇦 加拿大节点、🇬🇧 英国节点、🇫🇷 法国节点、🇩🇪 德国节点、🇳🇱 荷兰节点、🇹🇷 土耳其节点、🇷🇺 俄罗斯节点、🌐 其他地区、🏠 家宽节点 |
 | 倍率 | 🐢 低倍率节点 |
 | 通讯社交 | 📨 Telegram、🎧 Discord、📞 Talkatone、📹 Zoom、💬 即时通讯、🌐 社交媒体 |
-| AI | 🤖 ChatGPT、🤖 Copilot、🤖 Claude、🤖 Gemini、🤖 Grok、🤖 国外AI服务、🤖 国内AI服务 |
+| AI | 🤖 国外AI服务、🤖 国内AI服务 |
 | 流媒体 | 📹 YouTube、🎥 Netflix、🎥 DisneyPlus、🎥 HBO、🎥 PrimeVideo、🎥 AppleTV+、🎥 Emby、🎻 Spotify、📺 Bahamut、🎶 TikTok |
 | 开发 / 云服务 | 🚀 GitHub、📦 容器服务、💻 开发者服务、📚 学术资源、📢 谷歌FCM、🇬 谷歌服务、🍎 苹果服务、Ⓜ️ 微软服务、💾 OneDrive、💳 PayPal |
 | 游戏 / 下载 | 🎮 游戏平台、🎮 Steam、⏬ PT站点、🚀 测速工具 |
@@ -143,7 +143,10 @@ subconverter 的外部配置（`config=` 指向的 ini）只是「配方」：�
 
 几点说明：
 
-- **17 个 `url-test`、46 个 `select`**。`url-test` 是：`♻️ 自动选择`、15 个地区/家宽组、`🐢 低倍率节点`；其余全是 `select`，你自己点。
+- **17 个 `url-test`、41 个 `select`**。`url-test` 是：`♻️ 自动选择`、15 个地区/家宽组、`🐢 低倍率节点`；其余全是 `select`，你自己点。
+- **AI 只留两组**：`xai` / `openai` / `bing` / `anthropic` / `google-gemini` / `category-ai-!cn` 这 6 条规则全部指向 `🤖 国外AI服务`，不再按服务拆 5 个组。`🤖 国内AI服务` 仍单独一组、默认直连。
+- **`📦 容器服务`**：GEOSITE `docker` + `category-container`，覆盖 Docker Hub、GitHub Container Registry（ghcr.io）、Kubernetes 等容器镜像仓库域名。
+- **`💻 开发者服务`**：GEOSITE `category-dev`，覆盖 GitHub、GitLab、Stack Overflow、npm、PyPI 等开发者常用站点。两组都把 `🎯 全球直连` 放在候选列表最后，可以在面板里一键切直连。
 - **`🚀 手动选择`** 末尾带 `.*`，等于「订阅里的全部节点」都列在这里，地区正则一个都没匹配上时也不至于无处可选。
 - **`🔀 非标端口`** 用 `DST-PORT` 把 1-79、81-442、444-65535 三段单独处理，方便 BT、游戏这类非 80/443 流量。
 - **`🐢 低倍率节点`** 只匹配 `0.x` 这种小数倍率，`2x` 不会命中。
@@ -212,16 +215,16 @@ OpenClash 拼转换地址时不带 `expand`，于是远程规则集保留成 `ru
 
 | 订阅 | 转换结果 | 组数 | 规则数 | 真空组 |
 |---|---|---|---|---|
-| 一分机场 | 成功 | 63 | 63 | 0 |
-| 泡泡狗 | 成功 | 63 | 63 | 0 |
-| 泡泡狗转 | 成功 | 63 | 63 | 0 |
-| 69云 | 成功 | 63 | 63 | 0 |
-| 69云转 | 成功 | 63 | 63 | 0 |
-| 糖果 | 成功 | 63 | 63 | 0 |
-| 极速Cloud | 成功 | 63 | 63 | 0 |
-| 极速Cloud转 | 成功 | 63 | 63 | 0 |
-| Bluetile | 成功 | 63 | 63 | 0 |
-| Bluetile转 | 成功 | 63 | 63 | 0 |
+| 一分机场 | 成功 | 58 | 63 | 0 |
+| 泡泡狗 | 成功 | 58 | 63 | 0 |
+| 泡泡狗转 | 成功 | 58 | 63 | 0 |
+| 69云 | 成功 | 58 | 63 | 0 |
+| 69云转 | 成功 | 58 | 63 | 0 |
+| 糖果 | 成功 | 58 | 63 | 0 |
+| 极速Cloud | 成功 | 58 | 63 | 0 |
+| 极速Cloud转 | 成功 | 58 | 63 | 0 |
+| Bluetile | 成功 | 58 | 63 | 0 |
+| Bluetile转 | 成功 | 58 | 63 | 0 |
 
 「真空组」指既没有 `proxies:` 列表、也没有 `use:` 的策略组。**这种组会让 mihomo 直接拒绝加载**，实测报错：
 
@@ -242,8 +245,8 @@ configuration file test failed
 configuration file /tmp/vv.yaml test is successful
 ```
 
-- Bluetile：63 组 / 63 规则 + 6 个 rule-providers，通过
-- 一分机场：63 组 / 63 规则 + 6 个 rule-providers，通过
+- Bluetile：58 组 / 63 规则 + 6 个 rule-providers，通过
+- 一分机场：58 组 / 63 规则 + 6 个 rule-providers，通过
 
 49 条 geosite 全部正常加载（`cn` 110,177 条、`geolocation-!cn` 27,378 条、`gfw` 4,462 条……），无报错。
 
@@ -400,7 +403,7 @@ configuration file test failed
 
 **审核也替我确认了这些是对的**（实测，不是推测）：
 
-- 63 组 / 63 条 ruleset 与官方模板**逐字节一致**，除 `exclude_remarks` 和注释外没有其它改动
+- 规则段（63 条 `ruleset=`）与官方模板逐字节一致；策略组在官方 63 组基础上合并了 5 个国外 AI 组，现为 58 组；另有 `exclude_remarks` 与注释差异
 - 6 个 `@sha` 锁定地址全部可用，jsDelivr 对 commit 不可变缓存成立
 - 63 条规则 + 6 个 rule-providers 的结构能被 mihomo 正常加载
 - 文档里引用的报错文本 `proxy group[0]: … 'use' or 'proxies' missing` 一字不差
