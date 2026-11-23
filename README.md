@@ -32,7 +32,7 @@
 
 ## 二、这个文件是什么
 
-一句话：**它就是 Aethersailor 官方 `Custom_Clash_Full.ini`，只加了一条过滤规则。**
+一句话：**它就是 Aethersailor 官方 `Custom_Clash_Full.ini`，改了两处：合并 5 个国外 AI 组，加一条伪节点过滤。**
 
 | 项目 | 值 |
 |---|---|
@@ -40,10 +40,19 @@
 | 策略组 | 58 个（官方 63 个，5 个国外 AI 组已并入 `🤖 国外AI服务`） |
 | 规则行 | 63 条 `ruleset=`（官方上限 64，留 1 条余量） |
 | 转换器输出 | 63 条规则 + 6 个 rule-providers（默认模式） |
-| 本文件相对官方 | 只多 1 条 `exclude_remarks`（连同 6 行注释），其余逐字相同 |
-| 文件大小 | 32,375 字节（锁定版 33,137 字节） |
+| 本文件相对官方 | 两处改动：① 5 个国外 AI 组并入 `🤖 国外AI服务`；② 多 1 条 `exclude_remarks`。另有 9 行说明注释，其余逐字相同 |
+| 文件大小 | 32,673 字节（锁定版 33,435 字节） |
 
-### 唯一改动：过滤机场的「伪节点」
+### 改动一：合并 5 个国外 AI 组
+
+官方把 ChatGPT / Copilot / Claude / Gemini / Grok 各拆成一个组，本文件把它们并进 `🤖 国外AI服务`：
+
+- 删掉 `🤖 ChatGPT`、`🤖 Copilot`、`🤖 Claude`、`🤖 Gemini`、`🤖 Grok` 这 5 行组定义
+- 原来指向它们的 5 条规则（`openai`、`bing`、`anthropic`、`google-gemini`、`xai`）改为指向 `🤖 国外AI服务`
+
+这 5 个组在官方模板里没有被其他组引用，所以直接删定义不会报 `not found`。理由见下文「为什么不自建分组」末段。
+
+### 改动二：过滤机场的「伪节点」
 
 机场常把套餐信息塞成节点，名字长这样：
 
@@ -309,15 +318,27 @@ configuration file test failed
 7. **伪节点过滤只覆盖中文套餐文案，且只认名字开头。** 英文伪节点（`Traffic: 100G`）、emoji 开头的（`🕖到期时间:`）、机场自定义落地页（`[50万资源服] ✨ https://…`）都会漏过去，落进 `🌐 其他地区`。这是刻意的取舍：宁可漏杀，不可错杀真节点。
 8. **机场侧入口挂了，换任何模板都救不了。** 例如某个订阅的全部节点都指向同一个不可达入口时，模板层面无解。
 9. **`clash_meta -t` 不能证明规则集能拉到。** 实测 `-t` 根本不下载 `rule-providers`，URL 写错、jsDelivr 挂了，`-t` 照样绿。真正的验证是看运行后日志里有没有 `[Provider] … pull error`。
-10. **`rule-providers` 的缓存目录可能不存在。** 转换产物的路径是 `./providers/…`（相对 `-d /etc/openclash`）。本机实测 `/etc/openclash/providers` 目录当时并不存在——若 mihomo 不会自动创建，6 个规则集写入会失败。上线前建议先确认该目录存在。
+10. **`rule-providers` 的缓存目录不用手动建。** 转换产物的路径是 `./providers/…`（相对 `-d /etc/openclash`），首次运行前 `/etc/openclash/providers` 可能不存在。mihomo 写入规则集文件前会自动创建缺失的目录（源码 [`component/resource/vehicle.go`](https://github.com/MetaCubeX/mihomo/blob/Meta/component/resource/vehicle.go) 的 `safeWrite`），所以不影响使用。
 
 ---
 
 ## 九、跟随上游更新 / 自己改
 
-**跟上游**：上游是 Aethersailor 的 `Custom_Clash_Full.ini`。它更新后，下载新文件，在 `[custom]` 段后面加回那一行 `exclude_remarks`，覆盖本文件即可。改动只有这一处，很好对齐。
+**跟上游**：上游是 Aethersailor 的 `Custom_Clash_Full.ini`。它更新后，下载新文件，**两处改动都要重做**：
 
-**自己改**：直接编辑 `openclash-aethersailor-full.ini` 并提交，地址不变，OpenClash 下次更新订阅时自动生效（jsDelivr 有几十分钟缓存，急用可换 `fastly.jsdelivr.net`）。
+1. 在 `[custom]` 下面加回 `exclude_remarks` 那一行（连同上面的说明注释）
+2. 删掉 `🤖 ChatGPT`、`🤖 Copilot`、`🤖 Claude`、`🤖 Gemini`、`🤖 Grok` 5 行 `custom_proxy_group=`，再把 `openai`、`bing`、`anthropic`、`google-gemini`、`xai` 这 5 条 `ruleset=` 的组名改成 `🤖 国外AI服务`
+3. 两份文件都按上面改；锁定版另把 6 行规则集 URL 里的 `@main` 换成锁定的提交号
+
+⚠️ **只做第 1 步、漏了第 2 步，5 个 AI 组会悄悄回来**（组数变回 63），而且不报错。改完搜一下 `custom_proxy_group=🤖`，应该只剩 `🤖 国外AI服务`、`🤖 国内AI服务` 两行。如果上游新增了别的 AI 组，先看它有没有被其他组引用，再决定合不合并（理由同第七节：删被引用的组会让配置加载失败）。
+
+**自己改**：直接编辑 `openclash-aethersailor-full.ini` 并提交，地址不变，OpenClash 下次更新订阅时自动生效。
+
+jsDelivr 对分支地址最长缓存 **12 小时**（[官方说明](https://github.com/jsdelivr/jsdelivr#caching)），`fastly.jsdelivr.net` 是同一个服务，换它绕不开缓存。急用时在浏览器打开下面这个地址清缓存（文件名换成你改的那份），返回 `"status": "finished"` 就是清好了（实测 `@heads/main` 写法可用），再去 OpenClash 更新订阅：
+
+```
+https://purge.jsdelivr.net/gh/cartoonsh/openclash-ini-template@heads/main/openclash-aethersailor-full.ini
+```
 
 改的时候注意两点：
 
@@ -335,6 +356,7 @@ configuration file test failed
 - 本文件不含任何订阅地址、token、节点 IP、节点密码。
 - 文件名和仓库名都不含机场名。
 - 提交历史里也没有出现订阅地址（全部通过网页编辑器写入）。
+- ⚠️ **但订阅地址本身会交给转换站。** OpenClash 开启「订阅转换」后，会把每条订阅的完整地址（含 token）发给转换后端（默认 `api.asailor.org`），由它去拉节点、套模板。也就是说，转换站能看到你所有订阅的 token 和全部节点。这和用哪个模板无关，用 ACL4SSR 也一样。在意的话可以自建 subconverter，把转换后端地址换成自己的。
 
 ---
 
@@ -369,7 +391,7 @@ configuration file test failed
 同一目录下的独立文件，不靠分支。它与上面的主文件**只差 6 行 URL**：把 `@main` 换成具体提交号 `@b64d5ac1828495be49751d123daeffff36df1e51`（2026-11-22）。jsDelivr 对 commit 是**不可变缓存**，内容永远停在那一刻。
 
 - 优点：行为可预期、可复现，不受上游改动影响。
-- 代价：上游的修复也拿不到。要刷新时，把 6 行里的 sha 换成上游 main 的最新提交即可（跟我说一句就行）。
+- 代价：上游的修复也拿不到。要刷新时，把 6 行里的 sha 换成上游 main 的最新提交即可。
 
 > 早期这第二份是放在 `frozen-rules` 分支上的，现已删除，改成同目录独立文件：换模板地址时不用切分支，两份文件用同一条 `@main` 路径取，缓存行为一致。
 
