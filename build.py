@@ -21,7 +21,6 @@ import urllib.request
 UPSTREAM_URL = ("https://raw.githubusercontent.com/Aethersailor/"
                 "Custom_OpenClash_Rules/main/cfg/Custom_Clash_Full.ini")
 DEFAULT_PIN = "b64d5ac1828495be49751d123daeffff36df1e51"
-DEFAULT_PIN_DATE = "2026-11-22"
 
 AI_GROUPS = ["🤖 ChatGPT", "🤖 Copilot", "🤖 Claude", "🤖 Gemini", "🤖 Grok"]
 AI_TARGET = "🤖 国外AI服务"
@@ -50,24 +49,11 @@ SAVER_LINE = ("custom_proxy_group=%s`url-test`%s(?!.*(?:%s)).*`%s`%s"
 INFO_LINE = "custom_proxy_group=%s`select`(?:%s)" % (INFO_GROUP, INFO_RE)
 
 HEADER = """
-;===== 本文件由 build.py 从上游官方 Full 模板自动生成，请勿手改，同步上游请重跑 build.py =====
-;改动一：5 个国外 AI 组（ChatGPT / Copilot / Claude / Gemini / Grok）并入「🤖 国外AI服务」
-;        删掉这 5 个组定义，原来指向它们的 5 条 ruleset 改为指向「🤖 国外AI服务」
-;改动二：新增「ℹ️ 订阅信息」组，专门收纳机场塞进订阅的提示节点（剩余流量、到期时间、官网等）
-;        名字任何位置出现 剩余/到期/过期/有效期/官网/网址/重置/套餐/订阅/公告/客服/重要提示/已用/流量:/Traffic/Expire 即算（英文不分大小写）
-;        这个组不被任何规则和分组引用，只为让面板等软件能读到这些信息
-;改动三：其余所有按节点名挑选的分组都排除上述提示节点，它们不会被自动测速选中，也不会混进地区组
-;改动四：新增「💰 省流自动」测速组，只在倍率低于 2x 的节点里自动选（名字没写倍率按 1x 算），
-;        放在「🚀 手动选择」里紧跟「♻️ 自动选择」之后；「♻️ 自动选择」保持不变
+;===== 本文件由 build.py 从上游官方 Full 模板自动生成，请勿手改 =====
 """
 
-PIN_HEADER = """;===== 规则集锁定版（pinned）=====
-;本文件与同目录的 openclash-aethersailor-full.ini 只差这段说明和 {n} 行 URL：
-;  那 {n} 个远程规则集由 @main 改为锁定到上游提交
-;  {sha}（{date}）
-;用途：规则内容永不变动，行为可复现、可回归；代价是不跟随上游的修复。
-;要更新到最新规则：用 python build.py --pin <新提交sha> 重新生成。
-;选哪份：日常用 openclash-aethersailor-full.ini；需要"规则许变不许动"时用本文件。
+PIN_HEADER = """;===== 规则集锁定版：{n} 个远程规则集锁定到固定提交，内容不再变化 =====
+;重新锁定：python build.py --pin <提交sha>
 """
 
 
@@ -130,12 +116,12 @@ def transform(text):
     return "\n".join(out).rstrip("\n") + "\n", guarded
 
 
-def pin(text, sha, date):
+def pin(text, sha):
     pat = "Aethersailor/Custom_OpenClash_Rules@main/"
     n = sum(1 for l in text.split("\n") if l.startswith("ruleset=") and pat in l)
     body = "\n".join(l.replace(pat, "Aethersailor/Custom_OpenClash_Rules@%s/" % sha)
                      if l.startswith("ruleset=") else l for l in text.split("\n"))
-    return PIN_HEADER.format(n=n, sha=sha, date=date) + body, n
+    return PIN_HEADER.format(n=n) + body, n
 
 
 def check(text):
@@ -178,7 +164,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--upstream", help="本地上游原版文件；不填就从上游 main 下载")
     ap.add_argument("--pin", default=DEFAULT_PIN, help="锁定版锁到的上游提交 sha")
-    ap.add_argument("--pin-date", default=DEFAULT_PIN_DATE, help="该提交的日期，只写进说明")
     ap.add_argument("--out", default=os.path.dirname(os.path.abspath(__file__)))
     a = ap.parse_args()
     if a.upstream:
@@ -189,7 +174,7 @@ def main():
             raw = r.read()
     src = raw.decode("utf-8").replace("\r\n", "\n")
     full, guarded = transform(src)
-    pinned, n = pin(full, a.pin, a.pin_date)
+    pinned, n = pin(full, a.pin)
     stats = check(full)
     check(pinned)
     for fn, data in (("openclash-aethersailor-full.ini", full),
